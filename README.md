@@ -6,19 +6,69 @@ This repository contains the implementation of the **ERC246** governance token, 
 
 The **ERC246** token is designed to be used in decentralized governance systems, allowing users to propose and vote on decisions that affect the behavior and policies of the contract itself.
 
+### Key Advantage: Governance Built Directly Into the Token
+One of the most important advantages of **ERC246** is that the governance system is embedded directly into the token. This means developers don’t have to build or integrate separate governance frameworks. As soon as the **ERC246** token is deployed, the token becomes community-owned and governed by token holders, with all necessary governance functions already built in.
+
+This enables projects to launch community-owned tokens faster, with the community having full control from the start. Governance decisions like token minting, treasury management, and transfer fee updates are already part of the contract and can be managed through proposals and voting.
+
 ## Governance Process
 
 1. **Proposal Creation**: Token holders create proposals by calling `createProposal()`, specifying the addresses and function calls to be executed if the proposal is accepted.
 
 2. **Voting**: Token holders vote on proposals using their token balance as their voting power. They vote for or against the proposal by calling `vote()`.
 
-3. **Enqueueing**: After the voting period ends, anyone can call `enqueueProposal()` to mark the proposal as ready for execution. When a proposal is enqueued, a snapshot of the current voting power of all voters is taken; voting power is calculated based on token balances. This snapshot determines whether the proposal is accepted or rejected. If the proposal is accepted, enqueueing it starts a timelock after which the proposal will be executable. This timelock serves the purpose of giving holders enough time to exit (e.g. selling their tokens) if they see an enqueued proposal they don't agree with.
+3. **Enqueueing**: After the voting period ends, anyone can call `enqueueProposal()` to mark the proposal as ready for execution. When a proposal is enqueued, a snapshot of the current voting power of all voters is taken; voting power is calculated based on token balances. This snapshot determines whether the proposal is accepted or rejected. If the proposal is accepted, enqueueing it starts a timelock after which the proposal will be executable. This timelock serves the purpose of giving holders enough time to exit (e.g., selling their tokens) if they see an enqueued proposal they don't agree with.
 
 4. **Execution**: Once the time-lock period has passed, accepted proposals can be executed via `executeProposal()`, which will execute the encoded function calls defined in the proposal.
 
 <div style="text-align: center;">
   <img src="assets/governance_process.png" alt="Governance process flow chart" width="500" />
 </div>
+
+---
+
+## Governance Parameters and Limits
+
+**ERC246** allows the community to adjust key governance parameters via governance proposals while adhering to predefined limits to ensure security and prevent abuse. Below are the adjustable parameters and their bounds:
+
+### 1. **Voting Duration (`minimumVotingDurationBlocks`)**
+   - **Initial Value**: 5760 blocks (~1 day on Ethereum)
+   - **Description**: Sets how long proposals remain open for voting.
+   - **Governance Adjustable**: Yes, but cannot be set below the minimum allowed.
+   - **Bounds**:
+     - Minimum: 750 blocks (~2.5 hours, defined by `MINIMUM_ALLOWED_PROPOSAL_DURATION_BLOCKS`)
+     - Maximum: No hardcoded maximum (community can set longer durations).
+
+### 2. **Execution Delay (`executionDelayInBlocks`)**
+   - **Initial Value**: 1200 blocks (~4 hours on Ethereum)
+   - **Description**: Time-lock period between a proposal being accepted and it becoming executable.
+   - **Governance Adjustable**: Yes, but cannot be set below the minimum allowed.
+   - **Bounds**:
+     - Minimum: 750 blocks (~2.5 hours, defined by `MINIMUM_ALLOWED_EXECUTION_DELAY_BLOCKS`)
+     - Maximum: No hardcoded maximum (community can set longer delays).
+
+### 3. **Quorum Requirement (`quorumSupplyPercentageBps`)**
+   - **Initial Value**: 400 basis points (4%)
+   - **Description**: Percentage of total token supply that must vote for a proposal to be valid.
+   - **Governance Adjustable**: Yes, but cannot be set below the minimum allowed.
+   - **Bounds**:
+     - Minimum: 100 basis points (1%, defined by `MINIMUM_ALLOWED_QUORUM_SUPPLY_PERCENTAGE_BPS`)
+     - Maximum: No hardcoded maximum (community can set higher quorums).
+
+### 4. **Transfer Fee (`transferFeeBps`)**
+   - **Initial Value**: 0 basis points (no transfer fee)
+   - **Description**: Sets the fee (in basis points) applied to token transfers.
+   - **Governance Adjustable**: Yes, but cannot exceed the maximum allowed.
+   - **Bounds**:
+     - Minimum: 0 basis points (no fee)
+     - Maximum: 500 basis points (5%, defined by `MAX_TRANSFER_FEE_BPS`).
+
+### 5. **Minting Limit (`MAXIMUM_MINT_SUPPLY_PERCENTAGE_BPS`)**
+   - **Value**: 500 basis points (5%)
+   - **Description**: Limits the percentage of the total token supply that can be minted through a proposal.
+   - **Governance Adjustable**: **No**, this is a fixed limit to prevent excessive inflation.
+
+---
 
 ## Contracts
 
@@ -71,7 +121,7 @@ This is the interface that defines the core methods for governance-related funct
   Emitted when a proposal is executed.  
   **Parameters**:
   - `proposalId`: The ID of the proposal.
-  - `accepted`: Indicates whether the proposal was accepted (true) or rejected (false).
+  - `accepted`: Indicates whether the proposal was accepted or rejected.
 
 - **`ProposalRejected()`**  
   Emitted when a proposal is rejected.  
@@ -175,5 +225,9 @@ This section showcases functions that can only be executed if they are contained
 ---
 
 ## Security Considerations
-This standard is entirely experimental and unaudited, while testing has been conducted in an effort to ensure execution is as accurate as possible. Please use it with caution.
-Always audit your smart contracts before deploying them to a production environment.
+This standard is entirely experimental and unaudited, while testing has been conducted in an effort to ensure execution is as accurate as possible. Please use it with caution. Always audit your smart contracts before deploying them to a production environment.
+
+---
+
+## Conclusion
+The **ERC246** standard transforms token governance by embedding community-driven decision-making processes directly into the token contract. With built-in governance, time-locks, and quorum requirements, ERC246 empowers token holders to have direct control over the future of the project.
